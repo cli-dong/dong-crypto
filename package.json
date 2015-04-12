@@ -1,0 +1,36 @@
+{
+  "name": "dong-crypto",
+  "version": "0.0.0",
+  "description": "crypto for made file md5",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/crossjs/dong-crypto.git"
+  },
+  "keywords": [
+    "crypto",
+    "file",
+    "md5"
+  ],
+  "author": {
+    "name": "crossjs",
+    "email": "liwenfu@crossjs.com"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/crossjs/dong-crypto/blob/master/LICENSE-MIT"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/crossjs/dong-crypto/issues"
+  },
+  "homepage": "https://github.com/crossjs/dong-crypto",
+  "dependencies": {
+    "crypto": "0.0.3",
+    "gulp-util": "^3.0.0",
+    "through2": "^0.6.1"
+  }
+}
