@@ -28,15 +28,47 @@ module.exports = function(options) {
       return
     }
 
+    function calcQuery(dest, uri, query) {
+      if (fs.existsSync(dest)) {
+        options[uri] = uri + '?' + calcMd5(fs.readFileSync(dest), options.size | 0)
+      } else {
+        options[uri] = uri + query
+      }
+    }
+
     var content = file.contents.toString()
 
-    content = content.replace(/((?:href|src)=")(.+\.(?:css|js))(\?(@VERSION|[0-9a-f]+)")/g, function($0, $1, $2) {
-      if (!($2 in options)) {
-        options[$2] = $2 + '?' + calcMd5(fs.readFileSync(path.join(options.root, $2)), options.size | 0)
-      }
+    /*jshint maxparams:4*/
 
-      return $1 + options[$2] + '"'
-    })
+    content = content
+    // css and js
+    .replace(/(href|src)="(.+\.(?:css|js))(\?[0-9a-f]{32})?"/g,
+      function(all, attr, uri, query) {
+        // ignores path begin with http(s), and //
+        if (/^(https?:)?\/\//.test(uri)) {
+          return all
+        }
+
+        if (!(uri in options)) {
+          calcQuery(path.join(options.root, uri), uri, query)
+        }
+
+        return attr + '="' + options[uri] + '"'
+      })
+    // app files with seajs.use
+    .replace(/seajs.use\('((\/[^\/]+)\/app\/[^'\?]+?)(?:\?[0-9a-f]{32})?'\)/g,
+      function(all, uri, appname, query) {
+        // ignores path begin with http(s), and //
+        if (/^(https?:)?\/\//.test(uri)) {
+          return all
+        }
+
+        if (!(uri in options)) {
+          calcQuery(path.join(options.root, appname + '/dist' + uri + (/\.js$/.test(uri) ? '' : '.js')), uri, query)
+        }
+
+        return 'seajs.use(\'' + options[uri] + '\')'
+      })
 
     try {
       file.contents = new Buffer(content);
