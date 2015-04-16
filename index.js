@@ -28,11 +28,22 @@ module.exports = function(options) {
       return
     }
 
+    var resultsQuery = {}
+    var resultsNoQuery = {}
+
     function calcQuery(dest, uri, query) {
       if (fs.existsSync(dest)) {
-        options[uri] = uri + '?' + calcMd5(fs.readFileSync(dest), options.size | 0)
+        resultsQuery[uri] = uri + '?' + calcMd5(fs.readFileSync(dest), options.size | 0)
       } else {
-        options[uri] = uri + query
+        resultsQuery[uri] = uri + query
+      }
+    }
+
+    function calcNoQuery(dest, uri) {
+      if (fs.existsSync(dest)) {
+        resultsNoQuery[uri] = '\'' + uri + '\': \'' + calcMd5(fs.readFileSync(dest), options.size | 0) + '\''
+      } else {
+        resultsNoQuery[uri] = '\'' + uri + '\': \'\''
       }
     }
 
@@ -41,40 +52,54 @@ module.exports = function(options) {
     /*jshint maxparams:4*/
 
     content = content
+    // lib/config
+    .replace(/'((\/[^\/]+)\/app\/[^'\?]+?)': '(?:[0-9a-f]{8})?'/g,
+      function(all, uri, appname) {
+        // ignores path begin with http(s), and //
+        if (/^(https?:)?\/\//.test(uri)) {
+          return all
+        }
+
+        if (!(uri in resultsNoQuery)) {
+          calcNoQuery(path.join(options.root, appname + '/dist' + uri + (/\.js$/.test(uri) ? '' : '.js')), uri)
+        }
+
+        return resultsNoQuery[uri]
+      })
     // css and js
-    .replace(/(href|src)="(.+\.(?:css|js))(\?[0-9a-f]{32})?"/g,
+    .replace(/(href|src)="(.+\.(?:css|js))(\?[0-9a-f]{8})?"/g,
       function(all, attr, uri, query) {
         // ignores path begin with http(s), and //
         if (/^(https?:)?\/\//.test(uri)) {
           return all
         }
 
-        if (!(uri in options)) {
+        if (!(uri in resultsQuery)) {
           calcQuery(path.join(options.root, uri), uri, query)
         }
 
-        return attr + '="' + options[uri] + '"'
+        return attr + '="' + resultsQuery[uri] + '"'
       })
     // app files with seajs.use
-    .replace(/seajs.use\('((\/[^\/]+)\/app\/[^'\?]+?)(?:\?[0-9a-f]{32})?'\)/g,
+    .replace(/seajs.use\('((\/[^\/]+)\/app\/[^'\?]+?)(?:\?[0-9a-f]{8})?'\)/g,
       function(all, uri, appname, query) {
         // ignores path begin with http(s), and //
         if (/^(https?:)?\/\//.test(uri)) {
           return all
         }
 
-        if (!(uri in options)) {
+        if (!(uri in resultsQuery)) {
           calcQuery(path.join(options.root, appname + '/dist' + uri + (/\.js$/.test(uri) ? '' : '.js')), uri, query)
         }
 
-        return 'seajs.use(\'' + options[uri] + '\')'
+        return 'seajs.use(\'' + resultsQuery[uri] + '\')'
       })
 
     try {
-      file.contents = new Buffer(content);
-      this.push(file);
+      file.contents = new Buffer(content)
+      this.push(file)
     } catch (err) {
-      this.emit('error', new gutil.PluginError('dong-crypto', err, {fileName: file.path}));
+      this.emit('error', new gutil.PluginError('dong-crypto', err, {fileName: file.path}))
     }
 
     cb()
