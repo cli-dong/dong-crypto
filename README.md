@@ -2,7 +2,7 @@
 
 [![NPM version](https://img.shields.io/npm/v/dong-crypto.svg?style=flat-square)](https://npmjs.org/package/dong-crypto)
 
-> parse tree of spm dependencies
+> crypto for made file md5
 
 ## Install
 
