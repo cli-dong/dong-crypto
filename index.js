@@ -55,18 +55,13 @@ module.exports = function(options) {
     // lib/config
     .replace(/'((\/[^\/]+)\/app\/[^'\?]+?)': '(?:[0-9a-f]{8})?'/g,
       function(all, uri, appname) {
-        // ignores path begin with http(s), and //
-        if (/^(https?:)?\/\//.test(uri)) {
-          return all
-        }
-
         if (!(uri in resultsNoQuery)) {
           calcNoQuery(path.join(options.root, appname + '/dist' + uri + (/\.js$/.test(uri) ? '' : '.js')), uri)
         }
 
         return resultsNoQuery[uri]
       })
-    // css and js
+    // css and js in html
     .replace(/(href|src)="(.+\.(?:css|js))(\?[0-9a-f]{8})?"/g,
       function(all, attr, uri, query) {
         // ignores path begin with http(s), and //
@@ -79,20 +74,6 @@ module.exports = function(options) {
         }
 
         return attr + '="' + resultsQuery[uri] + '"'
-      })
-    // app files with seajs.use
-    .replace(/seajs.use\('((\/[^\/]+)\/app\/[^'\?]+?)(?:\?[0-9a-f]{8})?'\)/g,
-      function(all, uri, appname, query) {
-        // ignores path begin with http(s), and //
-        if (/^(https?:)?\/\//.test(uri)) {
-          return all
-        }
-
-        if (!(uri in resultsQuery)) {
-          calcQuery(path.join(options.root, appname + '/dist' + uri + (/\.js$/.test(uri) ? '' : '.js')), uri, query)
-        }
-
-        return 'seajs.use(\'' + resultsQuery[uri] + '\')'
       })
 
     try {
