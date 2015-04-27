@@ -7,11 +7,11 @@ var gutil = require('gulp-util')
 var through = require('through2')
 var crypto = require('crypto')
 
-function calcMd5(content, slice) {
+function calcMd5(content) {
   var md5 = crypto.createHash('md5')
   md5.update(content, 'utf8')
 
-  return slice > 0 ? md5.digest('hex').slice(0, slice) : md5.digest('hex')
+  return md5.digest('hex').slice(0, 8)
 }
 
 module.exports = function(options) {
@@ -33,7 +33,7 @@ module.exports = function(options) {
 
     function calcQuery(dest, uri, query) {
       if (fs.existsSync(dest)) {
-        resultsQuery[uri] = uri + '?' + calcMd5(fs.readFileSync(dest), options.size | 0)
+        resultsQuery[uri] = uri + '?' + calcMd5(fs.readFileSync(dest))
       } else {
         resultsQuery[uri] = uri + query
       }
@@ -41,7 +41,7 @@ module.exports = function(options) {
 
     function calcNoQuery(dest, uri) {
       if (fs.existsSync(dest)) {
-        resultsNoQuery[uri] = '\'' + uri + '\': \'' + calcMd5(fs.readFileSync(dest), options.size | 0) + '\''
+        resultsNoQuery[uri] = '\'' + uri + '\': \'' + calcMd5(fs.readFileSync(dest)) + '\''
       } else {
         resultsNoQuery[uri] = '\'' + uri + '\': \'\''
       }
@@ -53,10 +53,10 @@ module.exports = function(options) {
 
     content = content
     // lib/config
-    .replace(/'((\/[^\/]+)\/app\/[^'\?]+?)': '(?:[0-9a-f]{8})?'/g,
-      function(all, uri, appname) {
+    .replace(/'(\/[^'\?]*?index(\.js)?)': '(?:[0-9a-f]{8})?'/g,
+      function(all, uri) {
         if (!(uri in resultsNoQuery)) {
-          calcNoQuery(path.join(options.root, appname + '/dist' + uri + (/\.js$/.test(uri) ? '' : '.js')), uri)
+          calcNoQuery(path.join(options.root, '/dist' + uri + (/\.js$/.test(uri) ? '' : '.js')), uri)
         }
 
         return resultsNoQuery[uri]
