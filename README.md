@@ -7,7 +7,7 @@
 ## Install
 
 ```bash
-npm install -g dong-crypto
+npm install --save dong-crypto
 ```
 
 ## Usage
