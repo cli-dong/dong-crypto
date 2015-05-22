@@ -40,11 +40,24 @@ module.exports = function(options) {
     }
 
     function calcNoQuery(dest, uri) {
-      if (fs.existsSync(dest)) {
-        resultsNoQuery[uri] = '\'' + uri + '\': \'' + calcMd5(fs.readFileSync(dest)) + '\''
+      var value
+
+      if (options.i18n) {
+        value = options.i18n.map(function(lang) {
+          var _dest = path.join(options.root, 'dist', lang,  dest)
+          return '\'' + lang + '\'' + ': \'' + (fs.existsSync(_dest) ? calcMd5(fs.readFileSync(_dest)) : '') + '\''
+        })
+
+        value = ['{', value.join(',\n        '), '}'].join('\n        ')
+
       } else {
-        resultsNoQuery[uri] = '\'' + uri + '\': \'\''
+        dest = path.join(options.root, 'dist', dest)
+        value = fs.existsSync(dest) ? calcMd5(fs.readFileSync(dest)) : ''
+
+        value = '\'' + value + '\''
       }
+
+      resultsNoQuery[uri] = '\'' + uri + '\': ' + value
     }
 
     var content = file.contents.toString()
@@ -56,7 +69,7 @@ module.exports = function(options) {
     .replace(/'(\/[^'\?]*?index(\.js)?)': '(?:[0-9a-f]{8})?'/g,
       function(all, uri) {
         if (!(uri in resultsNoQuery)) {
-          calcNoQuery(path.join(options.root, '/dist' + uri + (/\.js$/.test(uri) ? '' : '.js')), uri)
+          calcNoQuery(uri + (/\.js$/.test(uri) ? '' : '.js'), uri)
         }
 
         return resultsNoQuery[uri]
