@@ -48,8 +48,7 @@ module.exports = function(options) {
           return '\'' + lang + '\'' + ': \'' + (fs.existsSync(_dest) ? calcMd5(fs.readFileSync(_dest)) : '') + '\''
         })
 
-        value = ['{', value.join(',\n        '), '}'].join('\n        ')
-
+        value = ['{', value.join(','), '}'].join('')
       } else {
         dest = path.join(options.root, 'dist', dest)
         value = fs.existsSync(dest) ? calcMd5(fs.readFileSync(dest)) : ''
